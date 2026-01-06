@@ -1,4 +1,4 @@
-# Copilot Instructions: Neon Survival Shooter
+# Copilot Instructions: Neon Trash
 
 ## Project Overview
 Single-file HTML5 Canvas game with vector-only rendering (no images). Pure JavaScript implementation with emphasis on visual effects using canvas compositing and glow effects.

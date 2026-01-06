@@ -1,5 +1,5 @@
 // ============================================
-// NEON SURVIVAL SHOOTER
+// NEON TRASH
 // ============================================
 
 const canvas = document.getElementById('gameCanvas');
@@ -34,6 +34,8 @@ const music = {
     startTime: 0,
     isPlaying: false,
     loopCount: 0,
+    currentPart: 'A', // A or B
+    partRepetitions: 0, // Count repetitions of current part
     
     // E Major key
     key: 'E Major',
@@ -48,10 +50,11 @@ const music = {
         'A': [110.00, 164.81, 207.65, 220.00]    // A, C#, E, A
     },
     
-    // Vivaldi Spring - Allegro (4 voices)
+    // Vivaldi Spring - Allegro (4 voices, 2 parts)
     // Each note: [scale degree from E (0=E, 1=F#, 2=G#...), duration in beats, octave shift]
     voices: {
-        violin1: [
+        // PART A - Opening theme (8 bars)
+        violin1_A: [
             // Bar 1: Famous opening motif
             [0, 0.25, 1], [0, 0.25, 1], [0, 0.25, 1], [0, 0.25, 1],
             [0, 0.25, 1], [0, 0.25, 1], [0, 0.25, 1], [0, 0.25, 1],
@@ -73,7 +76,7 @@ const music = {
             [0, 0.5, 1], [2, 0.25, 1], [4, 0.25, 1],
             [0, 1.0, 1]
         ],
-        violin2: [
+        violin2_A: [
             // Bar 1: Harmony (thirds below)
             [2, 0.5, 0], [2, 0.5, 0], [2, 0.5, 0], [2, 0.5, 0],
             // Bar 2: Counter melody
@@ -88,7 +91,7 @@ const music = {
             [7, 0.5, -1], [5, 0.5, -1], [4, 0.5, -1], [2, 0.5, -1],
             [0, 0.5, 0], [2, 0.5, 0], [0, 1.0, 0]
         ],
-        viola: [
+        viola_A: [
             // Bar 1: Inner harmony
             [0, 1.0, 0], [0, 1.0, 0], [0, 1.0, 0], [0, 1.0, 0],
             // Bar 2-4: Sustained harmony
@@ -99,7 +102,7 @@ const music = {
             [5, 1.0, 0], [4, 1.0, 0], [2, 1.0, 0], [0, 1.0, 0],
             [7, 1.0, -1], [5, 1.0, -1], [0, 2.0, 0]
         ],
-        cello: [
+        cello_A: [
             // Bar 1: Bass line (roots)
             [0, 1.0, -1], [0, 1.0, -1], [0, 1.0, -1], [0, 1.0, -1],
             // Bar 2-4: Walking bass
@@ -109,6 +112,81 @@ const music = {
             [0, 1.0, -1], [0, 1.0, -1], [4, 1.0, -1], [4, 1.0, -1],
             [5, 1.0, -1], [4, 1.0, -1], [2, 1.0, -1], [0, 1.0, -1],
             [7, 1.0, -2], [5, 1.0, -2], [0, 2.0, -1]
+        ],
+        
+        // PART B - Contrasting section with sequences (8 bars, more rhythmic)
+        violin1_B: [
+            // Bar 1: Rhythmic motif
+            [0, 0.25, 1], [2, 0.25, 1], [0, 0.25, 1], [2, 0.25, 1],
+            [4, 0.25, 1], [5, 0.25, 1], [4, 0.25, 1], [2, 0.25, 1],
+            [0, 0.5, 1], [2, 0.5, 1], [4, 1.0, 1],
+            // Bar 2: Sequence up
+            [2, 0.25, 1], [4, 0.25, 1], [2, 0.25, 1], [4, 0.25, 1],
+            [5, 0.25, 1], [7, 0.25, 1], [5, 0.25, 1], [4, 0.25, 1],
+            [2, 0.5, 1], [4, 0.5, 1], [5, 1.0, 1],
+            // Bar 3: Leap pattern
+            [0, 0.5, 1], [7, 0.5, 1], [0, 0.5, 2], [7, 0.5, 1],
+            [5, 0.5, 1], [4, 0.5, 1], [2, 0.5, 1], [0, 0.5, 1],
+            // Bar 4: Running eighth notes
+            [7, 0.25, 0], [0, 0.25, 1], [2, 0.25, 1], [4, 0.25, 1],
+            [5, 0.25, 1], [4, 0.25, 1], [2, 0.25, 1], [0, 0.25, 1],
+            [7, 0.5, 0], [5, 0.5, 0], [4, 1.0, 0],
+            // Bar 5-6: Build with repeated notes (echo of Part A)
+            [0, 0.25, 1], [0, 0.25, 1], [2, 0.25, 1], [2, 0.25, 1],
+            [4, 0.25, 1], [4, 0.25, 1], [5, 0.25, 1], [5, 0.25, 1],
+            [7, 0.25, 1], [7, 0.25, 1], [0, 0.25, 2], [0, 0.25, 2],
+            [7, 0.5, 1], [5, 0.5, 1], [4, 0.5, 1], [2, 0.5, 1],
+            // Bar 7: Descending scale
+            [0, 0.25, 1], [7, 0.25, 0], [5, 0.25, 0], [4, 0.25, 0],
+            [2, 0.25, 0], [0, 0.25, 0], [7, 0.25, -1], [5, 0.25, -1],
+            [4, 0.5, -1], [2, 0.5, -1], [0, 1.0, 0],
+            // Bar 8: Final cadence
+            [0, 0.5, 1], [7, 0.25, 0], [0, 0.25, 1],
+            [2, 0.5, 1], [0, 0.5, 1], [0, 1.0, 1]
+        ],
+        violin2_B: [
+            // Bar 1-2: Harmony following violin 1 pattern
+            [2, 0.5, 0], [4, 0.5, 0], [5, 0.5, 0], [4, 0.5, 0],
+            [2, 0.5, 0], [0, 0.5, 0], [7, 1.0, -1],
+            [4, 0.5, 0], [5, 0.5, 0], [7, 0.5, 0], [0, 0.5, 1],
+            [7, 0.5, 0], [5, 0.5, 0], [4, 1.0, 0],
+            // Bar 3-4: Counter melody
+            [0, 1.0, 0], [7, 1.0, 0], [5, 1.0, 0], [4, 1.0, 0],
+            [2, 0.5, 0], [4, 0.5, 0], [5, 0.5, 0], [7, 0.5, 0],
+            [0, 1.0, 1], [7, 1.0, 0], [5, 1.0, 0],
+            // Bar 5-8: Support harmony
+            [2, 0.5, 0], [2, 0.5, 0], [4, 0.5, 0], [4, 0.5, 0],
+            [5, 0.5, 0], [5, 0.5, 0], [7, 0.5, 0], [7, 0.5, 0],
+            [0, 1.0, 1], [7, 1.0, 0], [5, 0.5, 0], [4, 0.5, 0],
+            [2, 0.5, 0], [0, 0.5, 0], [7, 0.5, -1], [5, 0.5, -1],
+            [4, 1.0, -1], [2, 1.0, -1], [0, 2.0, 0]
+        ],
+        viola_B: [
+            // Bar 1-4: Rhythmic support
+            [0, 0.5, 0], [2, 0.5, 0], [4, 1.0, 0], [2, 1.0, 0],
+            [0, 1.0, 0], [7, 1.0, -1], [5, 1.0, -1], [4, 1.0, -1],
+            [2, 2.0, -1], [0, 2.0, 0], [7, 1.0, -1], [5, 1.0, -1],
+            [4, 1.0, -1], [2, 1.0, -1], [0, 2.0, 0],
+            // Bar 5-8: Sustained with movement
+            [0, 2.0, 0], [2, 2.0, 0], [4, 2.0, 0], [5, 2.0, 0],
+            [7, 1.0, 0], [5, 1.0, 0], [4, 1.0, 0], [2, 1.0, 0],
+            [0, 2.0, 0]
+        ],
+        cello_B: [
+            // Bar 1-4: Bouncing bass (two-note pattern)
+            [0, 0.5, -1], [0, 0.5, -2], [0, 0.5, -1], [0, 0.5, -2],
+            [0, 0.5, -1], [0, 0.5, -2], [0, 0.5, -1], [0, 0.5, -2],
+            [7, 0.5, -2], [7, 0.5, -3], [5, 0.5, -2], [5, 0.5, -3],
+            [4, 0.5, -2], [4, 0.5, -3], [2, 0.5, -2], [2, 0.5, -3],
+            [0, 0.5, -1], [0, 0.5, -2], [7, 0.5, -2], [7, 0.5, -3],
+            [5, 0.5, -2], [5, 0.5, -3], [4, 0.5, -2], [4, 0.5, -3],
+            [2, 0.5, -2], [2, 0.5, -3], [0, 0.5, -1], [0, 0.5, -2],
+            [7, 1.0, -2], [5, 1.0, -2],
+            // Bar 5-8: Walking pattern
+            [0, 1.0, -1], [7, 1.0, -2], [5, 1.0, -2], [4, 1.0, -2],
+            [2, 1.0, -2], [0, 1.0, -1], [7, 1.0, -2], [5, 1.0, -2],
+            [4, 1.0, -2], [2, 1.0, -2], [0, 1.0, -1], [7, 1.0, -2],
+            [5, 1.0, -2], [0, 1.0, -1], [0, 2.0, -1]
         ]
     },
     
@@ -130,7 +208,9 @@ function scaleDegreesToFreq(scaleDegree, octaveShift) {
 }
 
 function playVoice(voiceName, bar, startTime) {
-    const voice = music.voices[voiceName];
+    const part = music.currentPart;
+    const voiceKey = `${voiceName}_${part}`;
+    const voice = music.voices[voiceKey];
     if (!voice) return;
     
     const secondsPerBeat = 60 / music.bpm;
@@ -181,7 +261,9 @@ const game = {
     time: 0,
     shakeAmount: 0,
     lastSpawn: 0,  // Track last spawn time
-    explosionRadius: 60 // Radius for chain reaction explosions
+    explosionRadius: 60, // Radius for chain reaction explosions
+    bgEffectPhase: 0,
+    bgWaveAmplitude: 0
 };
 
 // Player object
@@ -236,9 +318,102 @@ window.addEventListener('keydown', (e) => {
     if (e.key.toLowerCase() === 'r') {
         restartGame();
     }
+    
+    // Cheat key: 'm' to skip to next music section
+    if (e.key.toLowerCase() === 'm') {
+        music.currentPart = music.currentPart === 'A' ? 'B' : 'A';
+        music.partRepetitions = 0;
+        console.log(`Switched to Part ${music.currentPart}`);
+    }
 });
+
 window.addEventListener('keyup', (e) => {
     keys[e.key.toLowerCase()] = false;
+});
+
+// Mouse and touch controls
+function getCanvasCoordinates(clientX, clientY) {
+    const rect = canvas.getBoundingClientRect();
+    const scaleX = canvas.width / rect.width;
+    const scaleY = canvas.height / rect.height;
+    return {
+        x: (clientX - rect.left) * scaleX,
+        y: (clientY - rect.top) * scaleY
+    };
+}
+
+// Mouse events
+canvas.addEventListener('mousedown', (e) => {
+    const coords = getCanvasCoordinates(e.clientX, e.clientY);
+    player.targetX = coords.x;
+    player.targetY = coords.y;
+    player.touchActive = true;
+    
+    // Start music on first interaction
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    if (!music.isPlaying) {
+        music.isPlaying = true;
+        scheduleMusic();
+        console.log('Vivaldi Spring in E Major started!');
+    }
+});
+
+canvas.addEventListener('mousemove', (e) => {
+    if (player.touchActive) {
+        const coords = getCanvasCoordinates(e.clientX, e.clientY);
+        player.targetX = coords.x;
+        player.targetY = coords.y;
+    }
+});
+
+canvas.addEventListener('mouseup', () => {
+    player.touchActive = false;
+});
+
+canvas.addEventListener('mouseleave', () => {
+    player.touchActive = false;
+});
+
+// Touch events
+canvas.addEventListener('touchstart', (e) => {
+    e.preventDefault();
+    const touch = e.touches[0];
+    const coords = getCanvasCoordinates(touch.clientX, touch.clientY);
+    player.targetX = coords.x;
+    player.targetY = coords.y;
+    player.touchActive = true;
+    
+    // Start music on first interaction
+    if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+    if (!music.isPlaying) {
+        music.isPlaying = true;
+        scheduleMusic();
+        console.log('Vivaldi Spring in E Major started!');
+    }
+});
+
+canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault();
+    if (player.touchActive && e.touches.length > 0) {
+        const touch = e.touches[0];
+        const coords = getCanvasCoordinates(touch.clientX, touch.clientY);
+        player.targetX = coords.x;
+        player.targetY = coords.y;
+    }
+});
+
+canvas.addEventListener('touchend', (e) => {
+    e.preventDefault();
+    player.touchActive = false;
+});
+
+canvas.addEventListener('touchcancel', (e) => {
+    e.preventDefault();
+    player.touchActive = false;
 });
 
 // ============================================
@@ -261,7 +436,7 @@ function playLaser() {
     osc.frequency.exponentialRampToValueAtTime(note, audioCtx.currentTime + 0.08);
     
     // Quick fade out
-    gain.gain.setValueAtTime(0.12, audioCtx.currentTime);
+    gain.gain.setValueAtTime(0.25, audioCtx.currentTime);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.08);
     
     osc.start(audioCtx.currentTime);
@@ -287,7 +462,7 @@ function playExplosion() {
     
     // Quick attack, slower decay
     gain.gain.setValueAtTime(0, audioCtx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.25, audioCtx.currentTime + 0.01);
+    gain.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.01);
     gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
     
     osc.start(audioCtx.currentTime);
@@ -396,7 +571,7 @@ function playHiHat(time, open = false) {
     noiseGain.connect(audioCtx.destination);
     
     const duration = open ? 0.1 : 0.05;
-    noiseGain.gain.setValueAtTime(0.15, time);
+    noiseGain.gain.setValueAtTime(0.08, time);
     noiseGain.gain.exponentialRampToValueAtTime(0.01, time + duration);
     
     noise.start(time);
@@ -418,7 +593,7 @@ function playBassNote(freq, time, duration) {
     filter.connect(gain);
     gain.connect(audioCtx.destination);
     
-    gain.gain.setValueAtTime(0.25, time);
+    gain.gain.setValueAtTime(0.15, time);
     gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
     
     osc.start(time);
@@ -435,7 +610,7 @@ function playMelodyNote(freq, time, duration) {
     osc.connect(gain);
     gain.connect(audioCtx.destination);
     
-    gain.gain.setValueAtTime(0.08, time);
+    gain.gain.setValueAtTime(0.05, time);
     gain.gain.exponentialRampToValueAtTime(0.01, time + duration);
     
     osc.start(time);
@@ -489,9 +664,17 @@ function scheduleMusic() {
         }
     }
     
-    // Increment loop counter
-    // Increment loop counter for next generation
+    // Increment loop counter and track part repetitions
     music.loopCount++;
+    music.partRepetitions++;
+    
+    // Switch parts: Part A plays 3 times, Part B plays 2 times
+    const maxReps = music.currentPart === 'A' ? 3 : 2;
+    if (music.partRepetitions >= maxReps) {
+        music.currentPart = music.currentPart === 'A' ? 'B' : 'A';
+        music.partRepetitions = 0;
+        console.log(`Vivaldi Spring - switching to Part ${music.currentPart}`);
+    }
     
     // Schedule next batch before current loops end
     setTimeout(() => scheduleMusic(), totalLoopDuration * 1000 - 1000);
@@ -522,6 +705,9 @@ function restartGame() {
     player.kills = 0;
     player.bulletCount = 3;
     player.fireRate = 40;
+    player.targetX = null;
+    player.targetY = null;
+    player.touchActive = false;
     
     enemies.length = 0;
     bullets.length = 0;
@@ -563,25 +749,88 @@ function update() {
 }
 
 function updatePlayer() {
-    // WASD movement with acceleration
-    let ax = 0, ay = 0;
+    if (!game.running) return;
     
-    if (keys['w']) ay -= player.speed;
-    if (keys['s']) ay += player.speed;
-    if (keys['a']) ax -= player.speed;
-    if (keys['d']) ax += player.speed;
-    
-    // Apply acceleration
-    player.vx += ax;
-    player.vy += ay;
+    // Touch/Mouse controls (higher priority)
+    if (player.targetX !== null && player.targetY !== null) {
+        const dx = player.targetX - player.x;
+        const dy = player.targetY - player.y;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        
+        if (dist > 10) { // Move towards target if not close enough
+            const moveX = (dx / dist) * 3.5; // Warp speed acceleration
+            const moveY = (dy / dist) * 3.5;
+            
+            player.vx += moveX;
+            player.vy += moveY;
+        } else {
+            // Close to target - snap to position and stop
+            player.x = player.targetX;
+            player.y = player.targetY;
+            player.vx = 0;
+            player.vy = 0;
+            
+            if (!player.touchActive) {
+                // Not actively dragging, clear target
+                player.targetX = null;
+                player.targetY = null;
+            }
+        }
+    } else {
+        // Keyboard controls (only when no touch/mouse target)
+        let ax = 0, ay = 0;
+        
+        if (keys['w']) ay -= player.speed;
+        if (keys['s']) ay += player.speed;
+        if (keys['a']) ax -= player.speed;
+        if (keys['d']) ax += player.speed;
+        
+        // Apply acceleration
+        player.vx += ax;
+        player.vy += ay;
+    }
     
     // Apply friction
     player.vx *= player.friction;
     player.vy *= player.friction;
     
-    // Update position
-    player.x += player.vx;
-    player.y += player.vy;
+    // Check for overshoot before updating position (when touch/mouse target exists)
+    if (player.targetX !== null && player.targetY !== null) {
+        const nextX = player.x + player.vx;
+        const nextY = player.y + player.vy;
+        
+        // Check if we would overshoot on X axis
+        const currentDxSign = Math.sign(player.targetX - player.x);
+        const nextDxSign = Math.sign(player.targetX - nextX);
+        if (currentDxSign !== nextDxSign && currentDxSign !== 0) {
+            // We would cross the target, snap to it
+            player.x = player.targetX;
+            player.vx = 0;
+        } else {
+            player.x = nextX;
+        }
+        
+        // Check if we would overshoot on Y axis
+        const currentDySign = Math.sign(player.targetY - player.y);
+        const nextDySign = Math.sign(player.targetY - nextY);
+        if (currentDySign !== nextDySign && currentDySign !== 0) {
+            // We would cross the target, snap to it
+            player.y = player.targetY;
+            player.vy = 0;
+        } else {
+            player.y = nextY;
+        }
+        
+        // Clear target if we've reached it and not dragging
+        if (player.x === player.targetX && player.y === player.targetY && !player.touchActive) {
+            player.targetX = null;
+            player.targetY = null;
+        }
+    } else {
+        // Normal position update when no target
+        player.x += player.vx;
+        player.y += player.vy;
+    }
     
     // Boundary collision
     if (player.x - player.radius < 0) {
@@ -1003,6 +1252,100 @@ function explodeEnemiesInRadius(x, y, radius, depth = 0) {
 }
 
 // ============================================
+// BACKGROUND EFFECTS
+// ============================================
+
+function renderBackgroundEffects() {
+    // Pulsing gradient waves based on music
+    const time = game.time * 0.02;
+    game.bgEffectPhase = time;
+    
+    // Get current bar for music sync
+    const bar = music.currentBar;
+    const beatPhase = (game.time % 30) / 30; // 30 frames per beat at 120bpm
+    
+    // Pulse amplitude based on beat
+    game.bgWaveAmplitude = 0.3 + Math.sin(beatPhase * Math.PI * 2) * 0.2;
+    
+    // Create multiple flowing gradient layers
+    ctx.save();
+    ctx.globalCompositeOperation = 'lighter';
+    
+    // Layer 1: Radial pulse from center
+    const centerX = canvas.width / 2;
+    const centerY = canvas.height / 2;
+    const pulse = Math.sin(time * 2) * 0.5 + 0.5;
+    const radius = Math.min(canvas.width, canvas.height) * (0.5 + pulse * 0.3);
+    
+    const gradient1 = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, radius);
+    gradient1.addColorStop(0, `rgba(0, 100, 200, ${0.05 * game.bgWaveAmplitude})`);
+    gradient1.addColorStop(0.5, `rgba(100, 0, 200, ${0.03 * game.bgWaveAmplitude})`);
+    gradient1.addColorStop(1, 'rgba(0, 0, 0, 0)');
+    
+    ctx.fillStyle = gradient1;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Layer 2: Flowing waves
+    for (let i = 0; i < 3; i++) {
+        const offset = i * Math.PI * 0.66;
+        const waveY = centerY + Math.sin(time * 1.5 + offset) * canvas.height * 0.2;
+        const waveHeight = canvas.height * 0.4;
+        
+        const gradient2 = ctx.createLinearGradient(0, waveY - waveHeight/2, 0, waveY + waveHeight/2);
+        const hue = (time * 20 + i * 120) % 360;
+        gradient2.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        gradient2.addColorStop(0.5, `hsla(${hue}, 70%, 50%, ${0.04 * game.bgWaveAmplitude})`);
+        gradient2.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient2;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Layer 3: Radial burst from player
+    if (player.speed > 0 || player.touchActive) {
+        const burstRadius = 200 + Math.sin(time * 4) * 50;
+        const gradient3 = ctx.createRadialGradient(player.x, player.y, 0, player.x, player.y, burstRadius);
+        gradient3.addColorStop(0, `rgba(0, 255, 255, ${0.08 * game.bgWaveAmplitude})`);
+        gradient3.addColorStop(0.7, `rgba(0, 100, 255, ${0.02 * game.bgWaveAmplitude})`);
+        gradient3.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = gradient3;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    
+    // Layer 4: Energy field from enemies
+    ctx.globalAlpha = 0.15 * game.bgWaveAmplitude;
+    for (const enemy of enemies) {
+        const enemyGradient = ctx.createRadialGradient(enemy.x, enemy.y, 0, enemy.x, enemy.y, 80);
+        // Convert hex color to rgba with alpha (handle both #RGB and #RRGGBB)
+        let hex = enemy.color.replace('#', '');
+        if (hex.length === 3) {
+            hex = hex[0] + hex[0] + hex[1] + hex[1] + hex[2] + hex[2];
+        }
+        const r = parseInt(hex.slice(0, 2), 16);
+        const g = parseInt(hex.slice(2, 4), 16);
+        const b = parseInt(hex.slice(4, 6), 16);
+        enemyGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.3)`);
+        enemyGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        
+        ctx.fillStyle = enemyGradient;
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+    }
+    ctx.globalAlpha = 1.0;
+    
+    // Layer 5: Scanlines for retro effect
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 0.02;
+    for (let y = 0; y < canvas.height; y += 4) {
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, y, canvas.width, 1);
+    }
+    ctx.globalAlpha = 1.0;
+    
+    ctx.restore();
+}
+
+// ============================================
 // RENDER
 // ============================================
 
@@ -1010,6 +1353,9 @@ function render() {
     // Translucent frame clearing for trails
     ctx.fillStyle = 'rgba(0, 0, 0, 0.15)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    // Render background effects layer (under everything)
+    renderBackgroundEffects();
     
     // Apply camera shake
     ctx.save();
